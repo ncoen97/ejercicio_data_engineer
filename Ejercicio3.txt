@@ -1,0 +1,28 @@
+a- ¿Qué formas de hacer scheduling de una tarea en linux conoce?
+
+Se puede usar un cron (comando crontab). Por ejemplo, se puede configurar para correr cada X tiempo, todos los días a cierta hora, o una vez por mes/año.
+Tambien está el comando at (pero tiene que ser instalado). La diferencia con cron es que at solo corre una vez, mientras que cron vuelve a correr cuando se cumple el intervalo.
+
+
+b- ¿Cómo y con qué comandos guardaría la mayor cantidad de detalle sobre las salidas de un script python que desea ejecutar de forma diaria a las 6AM?
+
+Si simplemente se desea gurdar la salida de un script y suponiendo que existe un script.sh que corre el python, se puede utilizar la siguiente sintaxis para escribir el output
+del script en un archivo `./script.sh >> script.log`, el cron quedaría de la siguiente manera `0 6 * * * /path/script.sh >> /path/script.log 2>&1`.
+Otra opción es guardar los logs por día en un archivo con el timestamp en el nombre, el cron quedaría `0 6 * * * /path/script.sh > /path/script_`date +\%Y\%m\%d\%H\%M\%S`.log 2>&1`.
+En caso de que este output necesite ser analizado continuamente, se podría usar el Elastic Stack para ingestar los datos, adaptarlos si es necesario, guardarlos, y luego poder
+buscarlos, analizarlos y visualizarlos en algun dashboard.
+
+
+c- ¿Qué comando o serie de comandos utilizaría para subir todos los contenidos de un directorio a un bucket de S3?
+
+Se puede utilizar el CLI de AWS. Mediante el comando `aws s3 cp myfolder s3://mybucket/myfolder --recursive`. En caso de que ya exista la carpeta en S3 y se quiera sincronizar,
+se puede utilizar el comando de sincronización `aws s3 sync myfolder s3://mybucket/myfolder`.
+
+
+d- Si una instancia de Redshift utilizada para reporting se está quedando sin espacio y se impone la necesidad de sacar algunos datos antiguos de la base, pero a pesar de que los
+datos de más de seis meses de antigüedad no se utilicen para reporting, se los requiere para entrenar y validar modelos predictivos, además de hacer algunos análisis ad-hoc en SQL
+a un precio razonable considerando tanto infraestructura como costos de consultas ¿Que tipo de solución propondría para poder consultar los datos usando servicios cloud en AWS?
+Intentar ser lo más descriptivo posible.
+
+En este caso pasaría los datos historicos a un bucket de S3. Mensualmente, cuando cada batch mensual de datos cumpla los 6 meses dentro de la instancia de redshift, los pasaría
+al bucket. Dentro de ese bucket, quedaría el historico de datos que puede ser utilziado para la finalidad que se necesite.
