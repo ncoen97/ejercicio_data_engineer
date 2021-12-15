@@ -20,4 +20,31 @@ FROM Data_Marcas
 JOIN Data_Productos ON Data_Productos.Cod_Marca = Data_Marcas.Cod_Marca
 RIGHT JOIN Data_Movimientos ON Data_Productos.Cod_Prod = Data_Movimientos.Cod_Prod 
 WHERE Data_Movimientos.Cod_Prod IS NULL
--- c- TBD
+-- c-
+-- Primer intento: Error al intentar retornar el valor de la ganancia de la funcion Obtener_Sumatoria_Ultimas_Operaciones
+SELECT TRUNC(Fecha), "Descripción de Cliente", Obtener_Sumatoria_Ultimas_Operaciones(Fecha, "Descripción de Cliente", 7)
+FROM Reporte_Movimientos
+GROUP BY TRUNC(Fecha), "Descripción de Cliente"
+ORDER BY FECHA, "Descripción de Cliente"
+
+CREATE FUNCTION Obtener_Sumatoria_Ultimas_Operaciones (TIMESTAMP, TEXT, SMALLINT)
+  RETURNS FLOAT
+STABLE
+AS $$
+  SELECT SUM("Ganancia Neta")
+  FROM Reporte_Movimientos
+  WHERE  "Descripción de Cliente" = $2 AND Fecha <= $1
+  ORDER BY Fecha DESC
+  LIMIT $3
+  END
+$$ LANGUAGE SQL;
+
+-- Segundo intento: Error por subquery
+SELECT TRUNC(Fecha), "Descripción de Cliente", (SELECT SUM(Ganancias."Ganancia Neta")
+  FROM (SELECT R."Ganancia Neta" FROM Reporte_Movimientos AS R
+    WHERE  R."Descripción de Cliente" = Reporte_Movimientos."Descripción de Cliente" AND R.Fecha <= Reporte_Movimientos.Fecha
+    ORDER BY R.Fecha DESC
+    LIMIT 7) AS Ganancias)
+FROM Reporte_Movimientos
+GROUP BY TRUNC(Fecha), "Descripción de Cliente"
+ORDER BY FECHA, "Descripción de Cliente"
